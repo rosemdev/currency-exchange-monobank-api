@@ -16,14 +16,14 @@
                   <label for="currency-from">Choose currency FROM:</label>
                   <select name="Select currency" id="currency-from" required>
                     <option value="" selected>From</option>
-                    <option value="default">default</option>
+                    <option v-bind:value="currency.AlphabeticCode" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
                   </select>
                 </div>
                 <div class="customer-data">
                   <label for="currency-to">Choose currency TO:</label>
                   <select name="Select currency" id="currency-to" required>
                     <option value="" selected>To</option>
-                    <option value="test">test</option>
+                    <option v-bind:value="currency.AlphabeticCode" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
                   </select>
                 </div>
               </div>
@@ -46,14 +46,13 @@ export default {
   name: 'CurrencyExchange',
   data() {
     return {
-      //availableCurrenciesParsed: JSON.parse(availableCurrencies)
-
+      monoCurrencies: [],
+      availableCurrencies,
     }
   },
 
   async beforeMount() {
-   // let currencies = await this.getCurrencies(URL);
-    //console.log(currencies);
+   //this.monoCurrencies = await this.getCurrencies(URL);
   },
 
   created() {
