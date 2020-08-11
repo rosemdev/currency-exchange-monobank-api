@@ -15,12 +15,7 @@ textarea
 }
 
 /* Remove the stupid outer glow in Webkit */
-input:focus
-{
-    outline:0;
-}
-
-select:focus
+input:focus, select:focus, button:focus
 {
     outline:0;
 }

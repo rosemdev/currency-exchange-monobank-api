@@ -7,29 +7,29 @@
                 <div class="header-block"><span>Using Monobank API</span></div>
             </header>
             <div class="converter-content">
-              <div class="converter">
+              <form class="converter" v-on:submit.prevent="exchange">
                 <div class="customer-data">
                   <label for="amount">Type an amount </label>
-                  <input id="amount" type="number" placeholder="1000" required>
+                  <input id="amount" name="amount" type="number" placeholder="1000" step="0.01" required v-model="amount">
                 </div>
                 <div class="customer-data">
                   <label for="currency-from">Choose currency FROM:</label>
-                  <select name="Select currency" id="currency-from" required>
+                  <select name="currency-from" id="currency-from" required v-model="currencyFrom">
                     <option value="" selected>From</option>
-                    <option v-bind:value="currency.AlphabeticCode" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
+                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
                   </select>
                 </div>
                 <div class="customer-data">
                   <label for="currency-to">Choose currency TO:</label>
-                  <select name="Select currency" id="currency-to" required>
+                  <select name="currency-to" id="currency-to" required v-model="currencyTo">
                     <option value="" selected>To</option>
-                    <option v-bind:value="currency.AlphabeticCode" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
+                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
                   </select>
                 </div>
-              </div>
+                <div class="button get-result"><button>Get result</button></div>
+              </form>
               <div class="result">
-                <div class="button get-result"><span>Get result</span></div>
-                <p class="result-amount">100 Euro</p>
+                <p class="result-amount">{{amount}} {{currencyFrom.currencyLetterName}} = {{result}} {{currencyTo.currencyLetterName}}</p>
               </div>
             </div>
           <div class="mask mask-1"></div>
@@ -39,20 +39,25 @@
 </template>
 <script>
 
-//const URL = 'https://api.monobank.ua/bank/currency'
+const URL = 'https://api.monobank.ua/bank/currency'
 import availableCurrencies from '../assets/currencies.json'
 
 export default {
   name: 'CurrencyExchange',
   data() {
     return {
-      monoCurrencies: [],
+      monoCurrencies: '',
       availableCurrencies,
+      amount: '',
+      currencyFrom: '',
+      currencyTo: '',
+      result: ''
     }
   },
 
   async beforeMount() {
-   //this.monoCurrencies = await this.getCurrencies(URL);
+   this.monoCurrencies = await this.getCurrencies(URL);
+   console.log(this.monoCurrencies);
   },
 
   created() {
@@ -75,8 +80,22 @@ export default {
        } catch (error) {
          console.log(error);
        }
-      
+    },
 
+    exchange() {
+      console.log('test', this.currencyFrom.currencyCode, this.amount, this.currencyTo.currencyCode);
+      console.log(this.filter(this.monoCurrencies, this.currencyFrom.currencyCode))
+    },
+
+    filter(arr, searchKey) {
+      return arr.filter(obj => {
+        console.log(obj);
+        return Object.keys(obj).some(key => {
+          console.log(key, obj[key]);
+          return obj[key] === searchKey;
+        });
+
+      });
     }
 
   }
@@ -92,18 +111,23 @@ export default {
       margin-top: 180px;
       min-height: 100%;
 
-      input, select {
+      input, select, button {
         width: 240px;
-        border: 1px solid #af84b9;
         padding: 15px;
-        font-size: 15px;
+        font-size: 16px;
         border-radius: 16px;
+        height: 50px;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      input, select {
+        border: 1px solid #af84b9;
       }
 
       select {
         appearance: none;       /* Remove default arrow */
         background-image: url('../assets/arrow.png');   /* Add custom arrow */
-        background-position: 200px center;
+        background-position: 212px center;
         background-repeat: no-repeat;
         background-size: 10px;
 
@@ -120,25 +144,25 @@ export default {
       }
 
       .button {
-        width: 240px;
-        border-radius: 16px;
-        padding: 15px;
-        font-size: 17px;
-        font-weight: 400;
-        text-align: center;
-        cursor: pointer;
-        text-transform: uppercase;
-        transition: box-shadow .3s;
-        background-color: #fa5255;
-        color: white;
+        margin: 30px 15px;
 
-        &:hover {
-          -webkit-box-shadow: 0px 9px 21px -8px #9f99a2;
-          -moz-box-shadow: 0px 9px 21px -8px #9f99a2;
-          box-shadow: 0px 9px 21px -8px #9f99a2;
+        button {
+          font-weight: 400;
+          text-align: center;
+          cursor: pointer;
+          text-transform: uppercase;
+          transition: box-shadow .3s;
+          background-color: #fa5255;
+          color: white;
+          font-family: 'Poppins', sans-serif;
+
+          &:hover {
+            -webkit-box-shadow: 0px 9px 21px -8px #9f99a2;
+            -moz-box-shadow: 0px 9px 21px -8px #9f99a2;
+            box-shadow: 0px 9px 21px -8px #9f99a2;
+          }
         }
       }
-
         .converter {
           max-width: 940px;
           width: 100%;
@@ -176,6 +200,7 @@ export default {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                flex-wrap: wrap;
 
                 .customer-data {
                   margin: 15px;
