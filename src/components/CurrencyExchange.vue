@@ -7,7 +7,7 @@
                 <div class="header-block"><span>Using Monobank API</span></div>
             </header>
             <div class="converter-content">
-              <form class="converter" v-on:submit.prevent="exchange">
+              <form class="converter" v-on:submit.prevent="exchange(amount, currencyFrom, currencyTo )">
                 <div class="customer-data">
                   <label for="amount">Type an amount </label>
                   <input id="amount" name="amount" type="number" placeholder="1000" step="0.01" required v-model="amount">
@@ -29,7 +29,10 @@
                 <div class="button get-result"><button>Get result</button></div>
               </form>
               <div class="result">
-                <p class="result-amount">{{amount}} {{currencyFrom.currencyLetterName}} = {{result}} {{currencyTo.currencyLetterName}}</p>
+                <p class="result-amount">
+                  <span>{{amount}} {{currencyFrom.currencyLetterName}}</span>
+                  <span v-if="result"> = {{result}} {{currencyTo.currencyLetterName}}</span>
+                </p>
               </div>
             </div>
           <div class="mask mask-1"></div>
@@ -57,7 +60,12 @@ export default {
 
   async beforeMount() {
    this.monoCurrencies = await this.getCurrencies(URL);
-   console.log(this.monoCurrencies);
+
+   if(this.monoCurrencies !== null) {
+     this.addToLocalStorage(this.monoCurrencies);
+   } else {
+     this.monoCurrencies = this.getDataFromLocaleStorage();
+   }
   },
 
   created() {
@@ -75,27 +83,51 @@ export default {
           },
         });
 
-        return response.json();
-
+        if(response.status === 200) {
+          return response.json();
+        } else {
+          return null;
+        }
        } catch (error) {
          console.log(error);
        }
     },
 
-    exchange() {
-      console.log('test', this.currencyFrom.currencyCode, this.amount, this.currencyTo.currencyCode);
-      console.log(this.filter(this.monoCurrencies, this.currencyFrom.currencyCode))
+    exchange(amount, currencyFrom, currencyTo) {
+      amount = parseFloat(amount)
+
+      console.log('test', amount, currencyFrom.currencyCode, currencyTo.currencyCode);
+
+      let currencyFromExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyFrom.currencyCode);
+      let currencyToExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyTo.currencyCode);
+      let uanRate;
+
+      if(currencyFrom.NumericCode === 980) {
+        this.result = amount / currencyToExachangeData.rateCross;
+
+      } else if(currencyFromExachangeData.rateSell && currencyToExachangeData.rateSell) {
+        uanRate = currencyFromExachangeData.rateSell / currencyToExachangeData.rateSell;
+      } else {
+        uanRate = currencyFromExachangeData.rateCross / currencyToExachangeData.rateCross;
+      }
+
+      console.log(currencyFromExachangeData, currencyToExachangeData);
+      this.result = (amount * uanRate).toFixed(2);
     },
 
-    filter(arr, searchKey) {
-      return arr.filter(obj => {
-        console.log(obj);
-        return Object.keys(obj).some(key => {
-          console.log(key, obj[key]);
-          return obj[key] === searchKey;
-        });
-
+    findMonoCurrencyCodeAObj(arr, searchCurrencyKode) {
+      return arr.find(item => {
+        return item.currencyCodeA === parseInt(searchCurrencyKode);
       });
+    },
+
+    addToLocalStorage(data) {
+      let serialData = JSON.stringify(data);
+      localStorage.setItem("monocurruncies", serialData);
+    },
+
+    getDataFromLocaleStorage() {
+      return JSON.parse(localStorage.getItem("monocurruncies"));
     }
 
   }
