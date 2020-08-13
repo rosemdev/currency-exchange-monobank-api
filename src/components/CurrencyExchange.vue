@@ -16,14 +16,20 @@
                   <label for="currency-from">Choose currency FROM:</label>
                   <select name="currency-from" id="currency-from" required v-model="currencyFrom">
                     <option value="" selected>From</option>
-                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
+                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}"
+                            v-for="currency in availableCurrencies"
+                            :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}
+                    </option>
                   </select>
                 </div>
                 <div class="customer-data">
                   <label for="currency-to">Choose currency TO:</label>
                   <select name="currency-to" id="currency-to" required v-model="currencyTo">
                     <option value="" selected>To</option>
-                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}" v-for="currency in availableCurrencies" :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}</option>
+                    <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}"
+                            v-for="currency in availableCurrencies"
+                            :key="currency.AlphabeticCode">{{currency.AlphabeticCode}} - {{currency.Currency}}
+                    </option>
                   </select>
                 </div>
                 <div class="button get-result"><button>Get result</button></div>
@@ -69,7 +75,6 @@ export default {
   },
 
   created() {
-
     console.log(availableCurrencies);
   },
 
@@ -94,31 +99,46 @@ export default {
     },
 
     exchange(amount, currencyFrom, currencyTo) {
-      amount = parseFloat(amount)
+      amount = parseFloat(amount);
+
+      // eslint-disable-next-line
+      debugger
 
       console.log('test', amount, currencyFrom.currencyCode, currencyTo.currencyCode);
 
-      let currencyFromExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyFrom.currencyCode);
-      let currencyToExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyTo.currencyCode);
-      let uanRate;
-
-      if(currencyFrom.NumericCode === 980) {
-        this.result = amount / currencyToExachangeData.rateCross;
-
-      } else if(currencyFromExachangeData.rateSell && currencyToExachangeData.rateSell) {
-        uanRate = currencyFromExachangeData.rateSell / currencyToExachangeData.rateSell;
-      } else {
-        uanRate = currencyFromExachangeData.rateCross / currencyToExachangeData.rateCross;
-      }
+      let currencyFromExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyFrom.currencyCode, currencyTo.currencyCode);
+      let currencyToExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyTo.currencyCode, currencyTo.currencyCode);
 
       console.log(currencyFromExachangeData, currencyToExachangeData);
-      this.result = (amount * uanRate).toFixed(2);
+
+      //Exchange UAN
+      let { availableUanRate, uanRate } =  this.getAvailableUanRateMono(currencyFromExachangeData, currencyToExachangeData);
+
+      if(currencyFrom.currencyCode === "980") {
+        return this.result = (amount / availableUanRate).toFixed(2);
+
+      } else if(currencyTo.currencyCode === "980") {
+        return this.result = (amount * availableUanRate).toFixed(2);
+
+        //Exchange not UAN
+      } else {
+        return this.result = (amount * uanRate).toFixed(2);
+      }
+
     },
 
-    findMonoCurrencyCodeAObj(arr, searchCurrencyKode) {
-      return arr.find(item => {
-        return item.currencyCodeA === parseInt(searchCurrencyKode);
-      });
+    findMonoCurrencyCodeAObj(arr, searchCurrencyCodeFrom, searchCurrencyCodeTo) {
+
+      if(searchCurrencyCodeFrom === "980" || searchCurrencyCodeTo  === "980") {
+        return arr.find(item => {
+          return item.currencyCodeA === parseInt(searchCurrencyCodeTo) && item.currencyCodeB === parseInt(searchCurrencyCodeFrom);
+        });
+
+      } else {
+        return arr.find(item => {
+          return item.currencyCodeA === parseInt(searchCurrencyCodeFrom);
+        });
+      }
     },
 
     addToLocalStorage(data) {
@@ -128,6 +148,32 @@ export default {
 
     getDataFromLocaleStorage() {
       return JSON.parse(localStorage.getItem("monocurruncies"));
+    },
+
+    getAvailableUanRateMono(currencyFrom, currencyTo) {
+      let uanRate;
+
+      //Exchange UAN
+      let availableUanRate = currencyTo.rateSell ? currencyTo.rateSell : currencyTo.rateCross;
+
+      //Exchange not UAN
+      //checking different cases when rateSell or rateCross are available or not
+      if(currencyFrom.rateSell && currencyTo.rateSell) {
+        uanRate = currencyFrom.rateSell / currencyTo.rateSell;
+
+      } else if(currencyFrom.rateSell && currencyTo.rateCross) {
+        uanRate = currencyFrom.rateSell / currencyTo.rateCross;
+
+      } else if(currencyFrom.rateCross && currencyTo.rateSell) {
+        uanRate = currencyFrom.rateCross / currencyTo.rateSell;
+      } else {
+        uanRate = currencyFrom.rateCross / currencyTo.rateCross;
+      }
+
+      return {
+        availableUanRate,
+        uanRate
+      };
     }
 
   }
