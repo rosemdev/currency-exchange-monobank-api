@@ -26,9 +26,18 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
-    overflow: hidden;
+    position: relative;
+  }
+
+  body::before {
+    position: absolute;
+    content: '';
+    left: 0;
+    right: 0;
+    height: 100vh;
     background-image: linear-gradient(242deg, #d99c9d, #8677d9 51%, #6072cc);
+    background-repeat: no-repeat;
+    z-index: -1;
   }
 
   #app {

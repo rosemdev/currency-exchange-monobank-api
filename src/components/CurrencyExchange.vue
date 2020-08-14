@@ -1,6 +1,6 @@
 <template>
     <div class="main">
-        <div class="converter">
+        <div class="converter-popup">
             <header>
                 <div class="header-block"><span>Currency converter</span></div>
                 <div class="header-block"><img class="baby" src="../assets/logo.svg"></div>
@@ -12,11 +12,13 @@
               >
                 <div class="customer-data">
                   <label for="amount">Type an amount </label>
-                  <input id="amount" name="amount" type="number" placeholder="1000" step="0.01" required v-model="amount">
+                  <input id="amount" name="amount" type="number" placeholder="1000" step="0.01" required v-model="amount"
+                         @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode )">
                 </div>
                 <div class="customer-data">
                   <label for="currency-from">Choose currency FROM:</label>
-                  <select name="currency-from" id="currency-from" required v-model="currencyFrom">
+                  <select name="currency-from" id="currency-from" required v-model="currencyFrom"
+                          @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode )">
                     <option value="" selected>From</option>
                     <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}"
                             v-for="currency in availableCurrencies"
@@ -26,7 +28,8 @@
                 </div>
                 <div class="customer-data">
                   <label for="currency-to">Choose currency TO:</label>
-                  <select name="currency-to" id="currency-to" required v-model="currencyTo">
+                  <select name="currency-to" id="currency-to" required v-model="currencyTo"
+                          @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode )">
                     <option value="" selected>To</option>
                     <option v-bind:value="{currencyCode: currency.NumericCode, currencyLetterName:currency.AlphabeticCode}"
                             v-for="currency in availableCurrencies"
@@ -148,16 +151,14 @@ export default {
         searchCode = currencyFromCode;
       }
 
-      return arr.find(item => {
-        return item.currencyCodeA === searchCode && item.currencyCodeB === this.uanCurrencyCode;
-      });
+      return this.mono_findMultiCurrencyRateObj(arr, searchCode);
 
     },
 
     //Exchange not UAN
     mono_findMultiCurrencyRateObj(arr, searchCode) {
       return arr.find(item => {
-        return item.currencyCodeA === searchCode
+        return item.currencyCodeA === searchCode && item.currencyCodeB === this.uanCurrencyCode;
       });
     },
 
@@ -213,8 +214,6 @@ export default {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-top: 180px;
-      min-height: 100%;
 
       input, select, button {
         width: 240px;
@@ -268,14 +267,12 @@ export default {
           }
         }
       }
-        .converter {
+        .converter-popup {
           max-width: 940px;
           width: 100%;
           border-radius: 32px;
-          background-color: white;
-          position: relative;
-          z-index: 1;
-            
+          margin-top: 180px;
+
             header {
               display: flex;
               align-items: center;
@@ -291,9 +288,9 @@ export default {
             .converter-content {
               display: flex;
               flex-direction: column;
-              justify-content: space-around;
+              justify-content: center;
               padding: 20px;
-              min-height: 450px;
+              min-height: 420px;
               font-weight: 200;
               position: relative;
               z-index: 1;
