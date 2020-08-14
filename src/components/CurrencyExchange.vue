@@ -7,7 +7,9 @@
                 <div class="header-block"><span>Using Monobank API</span></div>
             </header>
             <div class="converter-content">
-              <form class="converter" v-on:submit.prevent="exchange(amount, currencyFrom, currencyTo )">
+              <form class="converter"
+                    v-on:submit.prevent="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode )"
+              >
                 <div class="customer-data">
                   <label for="amount">Type an amount </label>
                   <input id="amount" name="amount" type="number" placeholder="1000" step="0.01" required v-model="amount">
@@ -57,10 +59,11 @@ export default {
     return {
       monoCurrencies: '',
       availableCurrencies,
+      uanCurrencyCode: 980,
       amount: '',
       currencyFrom: '',
       currencyTo: '',
-      result: ''
+      result: undefined
     }
   },
 
@@ -79,8 +82,8 @@ export default {
   },
 
   methods: {
-    async getCurrencies (url) {
-       try {
+    async getCurrencies(url) {
+      try {
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -88,57 +91,79 @@ export default {
           },
         });
 
-        if(response.status === 200) {
+        if (response.status === 200) {
           return response.json();
         } else {
           return null;
         }
-       } catch (error) {
-         console.log(error);
-       }
+      } catch (error) {
+        console.log(error);
+      }
     },
 
-    exchange(amount, currencyFrom, currencyTo) {
-      amount = parseFloat(amount);
-
+    exchange(amount, currencyFromCode, currencyToCode) {
       // eslint-disable-next-line
-      debugger
+      //debugger
 
-      console.log('test', amount, currencyFrom.currencyCode, currencyTo.currencyCode);
+      amount = parseFloat(amount);
+      currencyFromCode = parseInt(currencyFromCode);
+      currencyToCode = parseInt(currencyToCode);
 
-      let currencyFromExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyFrom.currencyCode, currencyTo.currencyCode);
-      let currencyToExachangeData =  this.findMonoCurrencyCodeAObj(this.monoCurrencies, currencyTo.currencyCode, currencyTo.currencyCode);
+      let currencyFromExchangeRate = '';
+      let currencyToExchangeRate = '';
+      let uanExchangeData = '';
+      let uanRate = '';
 
-      console.log(currencyFromExachangeData, currencyToExachangeData);
+      //help to know exchange type
+      // UAN to ANY (returns true) or
+      // ANY to UAN (returns false)
+      let isExchangeFromUan = currencyFromCode === this.uanCurrencyCode;
+
+      console.log('test', amount, currencyFromCode, currencyToCode);
 
       //Exchange UAN
-      let { availableUanRate, uanRate } =  this.getAvailableUanRateMono(currencyFromExachangeData, currencyToExachangeData);
+      if (currencyFromCode === this.uanCurrencyCode || currencyToCode === this.uanCurrencyCode) {
+        uanExchangeData = this.findMonoUanCurrencyRate(this.monoCurrencies, {currencyFromCode, currencyToCode});
+        uanRate = this.getMonoUanRate(uanExchangeData, isExchangeFromUan);
 
-      if(currencyFrom.currencyCode === "980") {
-        return this.result = (amount / availableUanRate).toFixed(2);
-
-      } else if(currencyTo.currencyCode === "980") {
-        return this.result = (amount * availableUanRate).toFixed(2);
-
-        //Exchange not UAN
       } else {
-        return this.result = (amount * uanRate).toFixed(2);
+        //Exchange not UAN
+        currencyFromExchangeRate = this.findMonoMultiCurrencyRate(this.monoCurrencies, currencyFromCode);
+        currencyToExchangeRate = this.findMonoMultiCurrencyRate(this.monoCurrencies, currencyToCode);
+        uanRate = this.getAvailableMonoUanRate(currencyFromExchangeRate, currencyToExchangeRate);
       }
 
+      console.log(currencyFromExchangeRate, currencyToExchangeRate);
+      return this.result = (amount * uanRate).toFixed(2);
     },
 
-    findMonoCurrencyCodeAObj(arr, searchCurrencyCodeFrom, searchCurrencyCodeTo) {
+    //Exchange not UAN
+    findMonoMultiCurrencyRate(arr, searchCode) {
+      return arr.find(item => {
+        return item.currencyCodeA === searchCode
+      });
+    },
 
-      if(searchCurrencyCodeFrom === "980" || searchCurrencyCodeTo  === "980") {
-        return arr.find(item => {
-          return item.currencyCodeA === parseInt(searchCurrencyCodeTo) && item.currencyCodeB === parseInt(searchCurrencyCodeFrom);
-        });
+    //Exchange UAN
+    findMonoUanCurrencyRate(arr, searchExchange) {
+      console.log(searchExchange, 'findMonoCurrencyCodeAObj');
+      let {currencyFromCode, currencyToCode} = searchExchange;
+      let searchCode = '';
 
-      } else {
-        return arr.find(item => {
-          return item.currencyCodeA === parseInt(searchCurrencyCodeFrom);
-        });
+      //currencyCodeA => returns ANY currencies
+      //currencyCodeB => returns UAN currencies
+      //from UAN to ANY => search by currencyToCode, which is ANY
+      if(currencyFromCode === this.uanCurrencyCode) {
+        searchCode = currencyToCode;
+      } else  {
+        //from ANY to UAN => search by currencyFromCode, which is UAN
+        searchCode = currencyFromCode;
       }
+
+      return arr.find(item => {
+        return item.currencyCodeA === searchCode && item.currencyCodeB === this.uanCurrencyCode;
+      });
+
     },
 
     addToLocalStorage(data) {
@@ -150,30 +175,42 @@ export default {
       return JSON.parse(localStorage.getItem("monocurruncies"));
     },
 
-    getAvailableUanRateMono(currencyFrom, currencyTo) {
+    getAvailableMonoUanRate(currencyFrom, currencyTo) {
       let uanRate;
 
-      //Exchange UAN
-      let availableUanRate = currencyTo.rateSell ? currencyTo.rateSell : currencyTo.rateCross;
+      // //Exchange UAN
+      // if (currencyFrom && !currencyTo) {
+      //   return uanRate = 1 / (currencyFrom.rateSell ? currencyFrom.rateSell : currencyFrom.rateCross);
+      // }
 
-      //Exchange not UAN
-      //checking different cases when rateSell or rateCross are available or not
-      if(currencyFrom.rateSell && currencyTo.rateSell) {
+      if (currencyFrom.rateSell && currencyTo.rateSell) {
+        //Exchange not UAN
+        //checking different cases when rateSell or rateCross are available or not
         uanRate = currencyFrom.rateSell / currencyTo.rateSell;
 
-      } else if(currencyFrom.rateSell && currencyTo.rateCross) {
+      } else if (currencyFrom.rateSell && currencyTo.rateCross) {
         uanRate = currencyFrom.rateSell / currencyTo.rateCross;
 
-      } else if(currencyFrom.rateCross && currencyTo.rateSell) {
+      } else if (currencyFrom.rateCross && currencyTo.rateSell) {
         uanRate = currencyFrom.rateCross / currencyTo.rateSell;
       } else {
         uanRate = currencyFrom.rateCross / currencyTo.rateCross;
       }
 
-      return {
-        availableUanRate,
-        uanRate
-      };
+      return uanRate;
+    },
+
+    getMonoUanRate(currencyRate, isExchangeFromUan) {
+      let uanRate;
+      let availableRate = currencyRate.rateSell ? currencyRate.rateSell : currencyRate.rateCross
+
+      if(isExchangeFromUan) {
+        uanRate = 1 / availableRate;
+      } else {
+        uanRate = availableRate;
+      }
+
+      return uanRate
     }
 
   }
