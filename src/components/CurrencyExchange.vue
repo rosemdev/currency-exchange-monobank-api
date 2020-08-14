@@ -77,10 +77,6 @@ export default {
    }
   },
 
-  created() {
-    console.log(availableCurrencies);
-  },
-
   methods: {
     async getCurrencies(url) {
       try {
@@ -119,44 +115,36 @@ export default {
       // ANY to UAN (returns false)
       let isExchangeFromUan = currencyFromCode === this.uanCurrencyCode;
 
-      console.log('test', amount, currencyFromCode, currencyToCode);
-
       //Exchange UAN
       if (currencyFromCode === this.uanCurrencyCode || currencyToCode === this.uanCurrencyCode) {
-        uanExchangeData = this.findMonoUanCurrencyRate(this.monoCurrencies, {currencyFromCode, currencyToCode});
-        uanRate = this.getMonoUanRate(uanExchangeData, isExchangeFromUan);
+        uanExchangeData = this.mono_findUanCurrencyRateObj(this.monoCurrencies, {currencyFromCode, currencyToCode});
+        uanRate = this.mono_getUanRate(uanExchangeData, isExchangeFromUan);
 
       } else {
         //Exchange not UAN
-        currencyFromExchangeRate = this.findMonoMultiCurrencyRate(this.monoCurrencies, currencyFromCode);
-        currencyToExchangeRate = this.findMonoMultiCurrencyRate(this.monoCurrencies, currencyToCode);
-        uanRate = this.getAvailableMonoUanRate(currencyFromExchangeRate, currencyToExchangeRate);
+        currencyFromExchangeRate = this.mono_findMultiCurrencyRateObj(this.monoCurrencies, currencyFromCode);
+        currencyToExchangeRate = this.mono_findMultiCurrencyRateObj(this.monoCurrencies, currencyToCode);
+        uanRate = this.mono_getMultiCurrencyRate(currencyFromExchangeRate, currencyToExchangeRate);
       }
 
+      console.log('test', amount, currencyFromCode, currencyToCode);
       console.log(currencyFromExchangeRate, currencyToExchangeRate);
+
       return this.result = (amount * uanRate).toFixed(2);
     },
 
-    //Exchange not UAN
-    findMonoMultiCurrencyRate(arr, searchCode) {
-      return arr.find(item => {
-        return item.currencyCodeA === searchCode
-      });
-    },
-
     //Exchange UAN
-    findMonoUanCurrencyRate(arr, searchExchange) {
-      console.log(searchExchange, 'findMonoCurrencyCodeAObj');
-      let {currencyFromCode, currencyToCode} = searchExchange;
+    mono_findUanCurrencyRateObj(arr, searchExchangeCodes) {
+      let {currencyFromCode, currencyToCode} = searchExchangeCodes;
       let searchCode = '';
 
-      //currencyCodeA => returns ANY currencies
-      //currencyCodeB => returns UAN currencies
-      //from UAN to ANY => search by currencyToCode, which is ANY
+      //currencyCodeA => returns ANY currency, which is unique identifier
+      //currencyCodeB => returns UAN currency, which is not unique identifier
+      //from UAN to ANY => search by currencyToCode, which is unique
       if(currencyFromCode === this.uanCurrencyCode) {
         searchCode = currencyToCode;
-      } else  {
-        //from ANY to UAN => search by currencyFromCode, which is UAN
+      } else {
+        //from ANY to UAN => search by currencyFromCode, which is unique
         searchCode = currencyFromCode;
       }
 
@@ -164,6 +152,13 @@ export default {
         return item.currencyCodeA === searchCode && item.currencyCodeB === this.uanCurrencyCode;
       });
 
+    },
+
+    //Exchange not UAN
+    mono_findMultiCurrencyRateObj(arr, searchCode) {
+      return arr.find(item => {
+        return item.currencyCodeA === searchCode
+      });
     },
 
     addToLocalStorage(data) {
@@ -175,17 +170,26 @@ export default {
       return JSON.parse(localStorage.getItem("monocurruncies"));
     },
 
-    getAvailableMonoUanRate(currencyFrom, currencyTo) {
+    //Exchange UAN
+    mono_getUanRate(currencyRate, isExchangeFromUan) {
+      let uanRate;
+      let availableRate = currencyRate.rateSell ? currencyRate.rateSell : currencyRate.rateCross
+
+      if(isExchangeFromUan) {
+        uanRate = 1 / availableRate;
+      } else {
+        uanRate = availableRate;
+      }
+
+      return uanRate
+    },
+
+    //Exchange not UAN
+    mono_getMultiCurrencyRate(currencyFrom, currencyTo) {
       let uanRate;
 
-      // //Exchange UAN
-      // if (currencyFrom && !currencyTo) {
-      //   return uanRate = 1 / (currencyFrom.rateSell ? currencyFrom.rateSell : currencyFrom.rateCross);
-      // }
-
+      //checking different cases when rateSell or rateCross are available or not
       if (currencyFrom.rateSell && currencyTo.rateSell) {
-        //Exchange not UAN
-        //checking different cases when rateSell or rateCross are available or not
         uanRate = currencyFrom.rateSell / currencyTo.rateSell;
 
       } else if (currencyFrom.rateSell && currencyTo.rateCross) {
@@ -198,21 +202,7 @@ export default {
       }
 
       return uanRate;
-    },
-
-    getMonoUanRate(currencyRate, isExchangeFromUan) {
-      let uanRate;
-      let availableRate = currencyRate.rateSell ? currencyRate.rateSell : currencyRate.rateCross
-
-      if(isExchangeFromUan) {
-        uanRate = 1 / availableRate;
-      } else {
-        uanRate = availableRate;
-      }
-
-      return uanRate
     }
-
   }
 }
 </script>
