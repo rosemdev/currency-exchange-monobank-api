@@ -25,13 +25,7 @@
               step="0.01"
               required
               v-model="amount"
-              @change="
-                exchange(
-                  amount,
-                  currencyFrom.currencyCode,
-                  currencyTo.currencyCode
-                )
-              "
+              @change="result = 0"
             />
           </div>
           <div class="customer-data">
@@ -41,13 +35,7 @@
               id="currency-from"
               required
               v-model="currencyFrom"
-              @change="
-                exchange(
-                  amount,
-                  currencyFrom.currencyCode,
-                  currencyTo.currencyCode
-                )
-              "
+              @change="result = 0"
             >
               <option value="" selected>From</option>
               <option
@@ -71,13 +59,7 @@
               id="currency-to"
               required
               v-model="currencyTo"
-              @change="
-                exchange(
-                  amount,
-                  currencyFrom.currencyCode,
-                  currencyTo.currencyCode
-                )
-              "
+              @change="result = 0"
             >
               <option value="" selected>To</option>
               <option
@@ -114,23 +96,36 @@
       <div class="mask mask-1"></div>
       <div class="mask mask-2"></div>
     </div>
+    <ErrorPopup
+      :headerTitle="headerTitle"
+      :message="errorMessage"
+      v-if="reloadPage"
+    ></ErrorPopup>
   </div>
 </template>
 <script>
 const URL = "https://api.monobank.ua/bank/currency";
 import availableCurrencies from "@/assets/currencies.json";
+import ErrorPopup from "./ErrorPopup";
 
 export default {
   name: "CurrencyExchange",
+  components: {
+    ErrorPopup
+  },
   data() {
     return {
       monoCurrencies: "",
       availableCurrencies,
       uanCurrencyCode: 980,
+      reloadPage: false,
       amount: "",
       currencyFrom: "",
       currencyTo: "",
-      result: ""
+      result: 0,
+      errorMessage:
+        "Sorry for the inconvenience! Currently we are observing some errors on the server side. Please try to reload the page. Thank you!",
+      headerTitle: "Internal Server Error"
     };
   },
 
@@ -144,6 +139,8 @@ export default {
 
     if (this.monoCurrencies !== null) {
       this.addToLocalStorage(this.monoCurrencies);
+    } else if (this.getDataFromLocaleStorage() === null) {
+      this.reloadPage = true;
     } else {
       this.monoCurrencies = this.getDataFromLocaleStorage();
     }
