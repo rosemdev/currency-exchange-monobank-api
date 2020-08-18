@@ -9,9 +9,7 @@
         <div class="header-block"><span>Using Monobank API</span></div>
       </header>
       <div class="converter-content">
-        <form
-          class="converter"
-          @submit.prevent="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)">
+        <form class="converter" @reset="reset">
           <div class="customer-data">
             <label for="amount">Type an amount </label>
             <input
@@ -23,7 +21,6 @@
               min="1"
               required
               v-model="amount"
-              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
             />
           </div>
           <div class="customer-data">
@@ -33,22 +30,21 @@
               id="currency-from"
               required
               v-model="currencyFrom"
-              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
+              ref="currencyFrom"
             >
               <option value="" selected>From</option>
               <option
-                v-bind:value="{
-                  currencyCode: currency.NumericCode,
-                  currencyLetterName: currency.AlphabeticCode,
-                  toString() {
-                    return this.currencyLetterName;
-                  }
-                }"
+                v-bind:value="currency"
                 v-for="currency in availableCurrencies"
                 :key="currency.AlphabeticCode"
                 >{{ currency.AlphabeticCode }} - {{ currency.Currency }}
               </option>
             </select>
+          </div>
+          <div class="customer-data">
+            <div class="change-currency-order" @click="switchCurrencyOrder">
+              <img src="../assets/refresh.png" alt="switch-currency-order" />
+            </div>
           </div>
           <div class="customer-data">
             <label for="currency-to">Choose currency TO:</label>
@@ -57,28 +53,28 @@
               id="currency-to"
               required
               v-model="currencyTo"
-              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
+              ref="currencyTo"
             >
               <option value="" selected>To</option>
               <option
-                v-bind:value="{
-                  currencyCode: currency.NumericCode,
-                  currencyLetterName: currency.AlphabeticCode
-                }"
+                v-bind:value="currency"
                 v-for="currency in availableCurrencies"
                 :key="currency.AlphabeticCode"
                 >{{ currency.AlphabeticCode }} - {{ currency.Currency }}
               </option>
             </select>
           </div>
-          <div class="button get-result"><button>Get result</button></div>
+          <div class="button get-result"><button type="reset">Reset</button></div>
         </form>
         <div class="result">
           <transition name="fade">
             <p class="result-amount" v-if="amount">
               <span>{{ amount > 0 ? amount : null }} </span>
-              <span v-if="amount > 0">{{currencyFrom.currencyLetterName }}</span>
-              <span v-if="result && amount > 0 && currencyFrom"> = {{ result > 0 ? result : null }} {{ currencyTo.currencyLetterName }}</span>
+              <span v-if="amount > 0">{{ currencyFrom.AlphabeticCode }}</span>
+              <span v-if="result && amount > 0 && currencyFrom">
+                = {{ result > 0 ? result : null }}
+                {{ currencyTo.AlphabeticCode }}</span
+              >
             </p>
           </transition>
         </div>
@@ -112,11 +108,71 @@ export default {
       amount: "",
       currencyFrom: "",
       currencyTo: "",
-      result: '',
       errorMessage:
-        "Sorry for the inconvenience! Currently we are observing some errors on the server side. Please try to reload the page. Thank you!",
+        "Sorry for the inconvenience! Currently we are observing some errors on the server side. " +
+        "Please try to reload the page. Thank you!",
       headerTitle: "Internal Server Error"
     };
+  },
+
+  computed: {
+    result() {
+      // eslint-disable-next-line
+      //debugger
+
+      if (
+        !this.amount ||
+        !this.currencyFrom.NumericCode ||
+        !this.currencyTo.NumericCode
+      ) {
+        return;
+      }
+
+      const amount = parseFloat(this.amount);
+      const currencyFromCode = parseInt(this.currencyFrom.NumericCode);
+      const currencyToCode = parseInt(this.currencyTo.NumericCode);
+
+      let currencyFromExchangeRate = "";
+      let currencyToExchangeRate = "";
+      let uanExchangeData = "";
+      let uanRate = "";
+
+      //help to know exchange type
+      // UAN to ANY (returns true) or
+      // ANY to UAN (returns false)
+      let isExchangeFromUan = currencyFromCode === this.uanCurrencyCode;
+
+      //Exchange UAN
+      if (
+        currencyFromCode === this.uanCurrencyCode ||
+        currencyToCode === this.uanCurrencyCode
+      ) {
+        uanExchangeData = this.mono_findUanCurrencyRateObj(
+          this.monoCurrencies,
+          { currencyFromCode, currencyToCode }
+        );
+        uanRate = this.mono_getUanRate(uanExchangeData, isExchangeFromUan);
+      } else {
+        //Exchange not UAN
+        currencyFromExchangeRate = this.mono_findMultiCurrencyRateObj(
+          this.monoCurrencies,
+          currencyFromCode
+        );
+        currencyToExchangeRate = this.mono_findMultiCurrencyRateObj(
+          this.monoCurrencies,
+          currencyToCode
+        );
+        uanRate = this.mono_getMultiCurrencyRate(
+          currencyFromExchangeRate,
+          currencyToExchangeRate
+        );
+      }
+
+      console.log("test", amount, currencyFromCode, currencyToCode);
+      console.log(currencyFromExchangeRate, currencyToExchangeRate);
+
+      return (amount * uanRate).toFixed(2);
+    }
   },
 
   errorCaptured() {
@@ -159,60 +215,9 @@ export default {
       }
     },
 
-    exchange(amount, currencyFromCode, currencyToCode) {
-      // eslint-disable-next-line
-      //debugger
-
-      if(!amount || !currencyFromCode || !currencyToCode) {
-        return;
-      }
-      
-      console.log(this.getDataFromLocaleStorage());
-
-      amount = parseFloat(amount);
-      currencyFromCode = parseInt(currencyFromCode);
-      currencyToCode = parseInt(currencyToCode);
-
-      let currencyFromExchangeRate = "";
-      let currencyToExchangeRate = "";
-      let uanExchangeData = "";
-      let uanRate = "";
-
-      //help to know exchange type
-      // UAN to ANY (returns true) or
-      // ANY to UAN (returns false)
-      let isExchangeFromUan = currencyFromCode === this.uanCurrencyCode;
-
-      //Exchange UAN
-      if (
-        currencyFromCode === this.uanCurrencyCode ||
-        currencyToCode === this.uanCurrencyCode
-      ) {
-        uanExchangeData = this.mono_findUanCurrencyRateObj(
-          this.monoCurrencies,
-          { currencyFromCode, currencyToCode }
-        );
-        uanRate = this.mono_getUanRate(uanExchangeData, isExchangeFromUan);
-      } else {
-        //Exchange not UAN
-        currencyFromExchangeRate = this.mono_findMultiCurrencyRateObj(
-          this.monoCurrencies,
-          currencyFromCode
-        );
-        currencyToExchangeRate = this.mono_findMultiCurrencyRateObj(
-          this.monoCurrencies,
-          currencyToCode
-        );
-        uanRate = this.mono_getMultiCurrencyRate(
-          currencyFromExchangeRate,
-          currencyToExchangeRate
-        );
-      }
-
-      console.log("test", amount, currencyFromCode, currencyToCode);
-      console.log(currencyFromExchangeRate, currencyToExchangeRate);
-
-      return (this.result = (amount * uanRate).toFixed(2));
+    reset(event) {
+      event.currentTarget.reset();
+      Object.assign(this, this.$options.data());
     },
 
     //Exchange UAN
@@ -244,7 +249,7 @@ export default {
     },
 
     addToLocalStorage(data) {
-      if(!data) {
+      if (!data) {
         return;
       }
       let serialData = JSON.stringify(data);
@@ -254,7 +259,7 @@ export default {
     getDataFromLocaleStorage() {
       let currencies = localStorage.getItem("monocurruncies");
 
-      if(currencies) {
+      if (currencies) {
         return JSON.parse(currencies);
       } else {
         return null;
@@ -264,9 +269,7 @@ export default {
     //Exchange UAN
     mono_getUanRate(currencyRate, isExchangeFromUan) {
       let uanRate;
-      let availableRate = currencyRate.rateSell
-        ? currencyRate.rateSell
-        : currencyRate.rateCross;
+      let availableRate = currencyRate.rateSell ?? currencyRate.rateCross;
 
       if (isExchangeFromUan) {
         uanRate = 1 / availableRate;
@@ -282,17 +285,26 @@ export default {
       let uanRate;
 
       //checking different cases when rateSell or rateCross are available or not
-      if (currencyFrom.rateSell && currencyTo.rateSell) {
-        uanRate = currencyFrom.rateSell / currencyTo.rateSell;
-      } else if (currencyFrom.rateSell && currencyTo.rateCross) {
-        uanRate = currencyFrom.rateSell / currencyTo.rateCross;
-      } else if (currencyFrom.rateCross && currencyTo.rateSell) {
-        uanRate = currencyFrom.rateCross / currencyTo.rateSell;
-      } else {
-        uanRate = currencyFrom.rateCross / currencyTo.rateCross;
-      }
+      uanRate =
+        (currencyFrom.rateSell ?? currencyFrom.rateCross) /
+        (currencyTo.rateSell ?? currencyTo.rateCross);
 
       return uanRate;
+    },
+
+    switchCurrencyOrder() {
+      //swap currencies
+      const { currencyFrom, currencyTo } = this.$refs;
+
+      [currencyFrom.selectedIndex, currencyTo.selectedIndex] = [
+        currencyTo.selectedIndex,
+        currencyFrom.selectedIndex
+      ];
+
+      [this.currencyFrom, this.currencyTo] = [
+        this.currencyTo,
+        this.currencyFrom
+      ];
     }
   }
 };
@@ -401,6 +413,14 @@ export default {
           label {
             display: block;
             margin: 5px;
+          }
+
+          .change-currency-order {
+            margin-top: 30px;
+            cursor: pointer;
+            img {
+              width: 27px;
+            }
           }
         }
 
