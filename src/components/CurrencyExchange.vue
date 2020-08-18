@@ -11,10 +11,7 @@
       <div class="converter-content">
         <form
           class="converter"
-          v-on:submit.prevent="
-            exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)
-          "
-        >
+          @submit.prevent="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)">
           <div class="customer-data">
             <label for="amount">Type an amount </label>
             <input
@@ -23,9 +20,10 @@
               type="number"
               placeholder="1000"
               step="0.01"
+              min="1"
               required
               v-model="amount"
-              @change="result = 0"
+              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
             />
           </div>
           <div class="customer-data">
@@ -35,7 +33,7 @@
               id="currency-from"
               required
               v-model="currencyFrom"
-              @change="result = 0"
+              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
             >
               <option value="" selected>From</option>
               <option
@@ -59,7 +57,7 @@
               id="currency-to"
               required
               v-model="currencyTo"
-              @change="result = 0"
+              @change="exchange(amount, currencyFrom.currencyCode, currencyTo.currencyCode)"
             >
               <option value="" selected>To</option>
               <option
@@ -76,21 +74,13 @@
           <div class="button get-result"><button>Get result</button></div>
         </form>
         <div class="result">
-          <p class="result-amount">
-            <transition name="fade">
-              <span v-if="amount">{{ amount }} </span>>
-            </transition>
-            <transition name="fade">
-              <span v-if="currencyFrom.currencyLetterName">{{
-                currencyFrom.currencyLetterName
-              }}</span>
-            </transition>
-            <transition name="fade">
-              <span v-if="result">
-                = {{ result }} {{ currencyTo.currencyLetterName }}</span
-              >
-            </transition>
-          </p>
+          <transition name="fade">
+            <p class="result-amount" v-if="amount">
+              <span>{{ amount > 0 ? amount : null }} </span>
+              <span v-if="amount > 0">{{currencyFrom.currencyLetterName }}</span>
+              <span v-if="result && amount > 0 && currencyFrom"> = {{ result > 0 ? result : null }} {{ currencyTo.currencyLetterName }}</span>
+            </p>
+          </transition>
         </div>
       </div>
       <div class="mask mask-1"></div>
@@ -122,7 +112,7 @@ export default {
       amount: "",
       currencyFrom: "",
       currencyTo: "",
-      result: 0,
+      result: '',
       errorMessage:
         "Sorry for the inconvenience! Currently we are observing some errors on the server side. Please try to reload the page. Thank you!",
       headerTitle: "Internal Server Error"
@@ -136,8 +126,10 @@ export default {
 
   async beforeMount() {
     this.monoCurrencies = await this.getCurrencies(URL);
+    // eslint-disable-next-line
+    //debugger;
 
-    if (this.monoCurrencies !== null) {
+    if (this.monoCurrencies) {
       this.addToLocalStorage(this.monoCurrencies);
     } else if (this.getDataFromLocaleStorage() === null) {
       this.reloadPage = true;
@@ -170,6 +162,12 @@ export default {
     exchange(amount, currencyFromCode, currencyToCode) {
       // eslint-disable-next-line
       //debugger
+
+      if(!amount || !currencyFromCode || !currencyToCode) {
+        return;
+      }
+      
+      console.log(this.getDataFromLocaleStorage());
 
       amount = parseFloat(amount);
       currencyFromCode = parseInt(currencyFromCode);
@@ -246,12 +244,21 @@ export default {
     },
 
     addToLocalStorage(data) {
+      if(!data) {
+        return;
+      }
       let serialData = JSON.stringify(data);
       localStorage.setItem("monocurruncies", serialData);
     },
 
     getDataFromLocaleStorage() {
-      return JSON.parse(localStorage.getItem("monocurruncies"));
+      let currencies = localStorage.getItem("monocurruncies");
+
+      if(currencies) {
+        return JSON.parse(currencies);
+      } else {
+        return null;
+      }
     },
 
     //Exchange UAN
@@ -296,13 +303,15 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  max-width: 1000px;
+  margin: auto;
 
   input,
   select,
   button {
-    width: 240px;
+    width: 205px;
     padding: 15px;
-    font-size: 16px;
+    font-size: 14px;
     border-radius: 16px;
     height: 50px;
     font-family: "Poppins", sans-serif;
@@ -316,7 +325,7 @@ export default {
   select {
     appearance: none; /* Remove default arrow */
     background-image: url("../assets/arrow.png"); /* Add custom arrow */
-    background-position: 212px center;
+    background-position: 180px center;
     background-repeat: no-repeat;
     background-size: 10px;
 
@@ -333,7 +342,7 @@ export default {
   }
 
   .button {
-    margin: 30px 15px;
+    margin: 15px;
 
     button {
       font-weight: 400;
@@ -353,7 +362,6 @@ export default {
     }
   }
   .converter-popup {
-    max-width: 940px;
     width: 100%;
     border-radius: 32px;
     margin-top: 180px;
@@ -374,7 +382,7 @@ export default {
       flex-direction: column;
       justify-content: center;
       padding: 20px;
-      min-height: 420px;
+      min-height: 350px;
       font-weight: 200;
       position: relative;
       z-index: 1;
@@ -386,7 +394,6 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
-        flex-wrap: wrap;
 
         .customer-data {
           margin: 15px;
@@ -396,10 +403,15 @@ export default {
             margin: 5px;
           }
         }
+
+        .button {
+          align-self: flex-end;
+        }
       }
 
       .result {
         align-self: center;
+        min-height: 112px;
 
         .result-amount {
           font-weight: 400;
