@@ -3,7 +3,7 @@
     <div class="converter-popup">
       <header>
         <div class="header-block"><span>Currency converter</span></div>
-        <div class="header-block">
+        <div class="header-block logo">
           <img class="baby" src="../assets/logo.svg" />
         </div>
         <div class="header-block"><span>Using Monobank API</span></div>
@@ -21,6 +21,7 @@
               min="1"
               required
               v-model="amount"
+              @change="reportValidity($event)"
             />
           </div>
           <div class="customer-data">
@@ -41,10 +42,8 @@
               </option>
             </select>
           </div>
-          <div class="customer-data">
-            <div class="change-currency-order" @click="switchCurrencyOrder">
-              <img src="../assets/refresh.png" alt="switch-currency-order" />
-            </div>
+          <div class="change-currency-order" @click="switchCurrencyOrder">
+            <img src="../assets/refresh.png" alt="switch-currency-order" />
           </div>
           <div class="customer-data">
             <label for="currency-to">Choose currency TO:</label>
@@ -64,7 +63,9 @@
               </option>
             </select>
           </div>
-          <div class="button get-result"><button type="reset">Reset</button></div>
+          <div class="button get-result">
+            <button type="reset">Reset</button>
+          </div>
         </form>
         <div class="result">
           <transition name="fade">
@@ -131,7 +132,6 @@ export default {
 
   computed: {
     result() {
-
       if (
         !this.amount ||
         !this.currencyFrom.NumericCode ||
@@ -213,14 +213,18 @@ export default {
       }
     },
 
+    reportValidity(event) {
+      this.isValid = event.target.reportValidity();
+    },
+
     reset(event) {
       // eslint-disable-next-line
-      debugger
+      debugger;
       event.currentTarget.reset();
       Object.assign(this, {
         amount: "",
         currencyFrom: "",
-        currencyTo: "",
+        currencyTo: ""
       });
     },
 
@@ -319,7 +323,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 1000px;
+  max-width: 890px;
   margin: auto;
 
   input,
@@ -357,6 +361,11 @@ export default {
     }
   }
 
+  label {
+    display: block;
+    margin: 5px;
+  }
+
   .button {
     margin: 15px;
 
@@ -377,6 +386,17 @@ export default {
       }
     }
   }
+
+  .change-currency-order {
+    margin-top: 30px;
+    cursor: pointer;
+    margin-left: -5px;
+    margin-right: -5px;
+
+    img {
+      width: 25px;
+    }
+  }
   .converter-popup {
     width: 100%;
     border-radius: 32px;
@@ -385,12 +405,16 @@ export default {
     header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: space-around;
       height: 96px;
       background-color: #f2f4f5;
       border-top-left-radius: 32px;
       border-top-right-radius: 32px;
       padding: 20px;
+
+      .logo {
+        width: 300px;
+      }
     }
 
     .converter-content {
@@ -410,26 +434,14 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
 
         .customer-data {
           margin: 15px;
 
-          label {
-            display: block;
-            margin: 5px;
+          &:first-child {
+            margin-right: 25px;
           }
-
-          .change-currency-order {
-            margin-top: 30px;
-            cursor: pointer;
-            img {
-              width: 27px;
-            }
-          }
-        }
-
-        .button {
-          align-self: flex-end;
         }
       }
 
