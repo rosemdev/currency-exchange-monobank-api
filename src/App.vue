@@ -45,4 +45,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  @media (max-width: 1024px) {
+    body::before {
+      min-height: -webkit-fill-available;
+    }
+  }
 </style>

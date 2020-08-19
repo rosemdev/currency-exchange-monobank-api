@@ -25,8 +25,9 @@ export default {
 .popup {
   position: absolute;
   z-index: 1;
-  width: 300px;
-  top:50%;
+  max-width: 300px;
+  width: 100%;
+  top: 50%;
 
   &:before {
     content: "";
@@ -58,6 +59,12 @@ export default {
     font-weight: 400;
     text-align: left;
     color: tomato;
+  }
+}
+
+@media (max-width: 767px) {
+  .popup {
+    top: auto;
   }
 }
 </style>

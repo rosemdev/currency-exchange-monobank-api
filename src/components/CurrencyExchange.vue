@@ -63,7 +63,7 @@
               </option>
             </select>
           </div>
-          <div class="button get-result">
+          <div class="button reset">
             <button type="reset">Reset</button>
           </div>
         </form>
@@ -73,7 +73,7 @@
               <span>{{ amount > 0 ? amount : null }} </span>
               <span v-if="amount > 0">{{ currencyFrom.AlphabeticCode }}</span>
               <span v-if="result && amount > 0 && currencyFrom">
-                = {{ result > 0 ? result : null }}
+                = {{ result }}
                 {{ currencyTo.AlphabeticCode }}</span
               >
             </p>
@@ -218,8 +218,6 @@ export default {
     },
 
     reset(event) {
-      // eslint-disable-next-line
-      debugger;
       event.currentTarget.reset();
       Object.assign(this, {
         amount: "",
@@ -324,6 +322,7 @@ export default {
   align-items: center;
   justify-content: center;
   max-width: 890px;
+  width: 100%;
   margin: auto;
 
   input,
@@ -368,6 +367,7 @@ export default {
 
   .button {
     margin: 15px;
+    align-self: flex-end;
 
     button {
       font-weight: 400;
@@ -397,6 +397,7 @@ export default {
       width: 25px;
     }
   }
+
   .converter-popup {
     width: 100%;
     border-radius: 32px;
@@ -406,14 +407,16 @@ export default {
       display: flex;
       align-items: center;
       justify-content: space-around;
-      height: 96px;
+      flex-wrap: wrap;
       background-color: #f2f4f5;
       border-top-left-radius: 32px;
       border-top-right-radius: 32px;
-      padding: 20px;
+      padding: 10px;
 
       .logo {
-        width: 300px;
+        img {
+          max-width: 400px;
+        }
       }
     }
 
@@ -422,7 +425,6 @@ export default {
       flex-direction: column;
       justify-content: center;
       padding: 20px;
-      min-height: 350px;
       font-weight: 200;
       position: relative;
       z-index: 1;
@@ -466,14 +468,16 @@ export default {
   }
   .mask-1 {
     margin-top: -50px;
-    width: 830px;
+    max-width: 830px;
+    width: 100%;
     margin-left: 55px;
     filter: blur(48px);
   }
 
   .mask-2 {
     margin-top: -90px;
-    width: 880px;
+    width: 100%;
+    max-width: 880px;
     margin-left: 30px;
     filter: blur(32px);
   }
@@ -491,5 +495,64 @@ export default {
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   transform: translateX(10px);
   opacity: 0;
+}
+
+
+@media (max-width: 767px) {
+  .main {
+    max-width: 330px;
+
+    .converter-popup {
+      margin-top: 25px;
+      margin-bottom: 25px;
+
+      header {
+        .logo {
+          img {
+            max-width:270px ;
+          }
+        }
+      }
+
+      .converter {
+        .change-currency-order {
+          flex-basis: 100%;
+          margin: 0;
+          img {
+            transform: translate(-50%);
+            margin-left: 50%;
+          }
+        }
+      }
+    }
+    .mask {
+      height: auto;
+    }
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .main {
+    max-width: 660px;
+
+    .converter-content {
+      .converter {
+        .customer-data {
+          &:first-child {
+            order: 1
+          }
+        }
+      }
+
+      .reset {
+        order: 1;
+      }
+    }
+
+    .mask {
+      height: auto;
+    }
+  }
+
 }
 </style>
