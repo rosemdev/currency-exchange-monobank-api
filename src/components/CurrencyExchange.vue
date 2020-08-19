@@ -115,10 +115,22 @@ export default {
     };
   },
 
+  async beforeMount() {
+    this.monoCurrencies = await this.getCurrencies(URL);
+    // eslint-disable-next-line
+    //debugger;
+
+    if (this.monoCurrencies) {
+      this.addToLocalStorage(this.monoCurrencies);
+    } else if (this.getDataFromLocaleStorage() === null) {
+      this.reloadPage = true;
+    } else {
+      this.monoCurrencies = this.getDataFromLocaleStorage();
+    }
+  },
+
   computed: {
     result() {
-      // eslint-disable-next-line
-      //debugger
 
       if (
         !this.amount ||
@@ -180,20 +192,6 @@ export default {
     debugger;
   },
 
-  async beforeMount() {
-    this.monoCurrencies = await this.getCurrencies(URL);
-    // eslint-disable-next-line
-    //debugger;
-
-    if (this.monoCurrencies) {
-      this.addToLocalStorage(this.monoCurrencies);
-    } else if (this.getDataFromLocaleStorage() === null) {
-      this.reloadPage = true;
-    } else {
-      this.monoCurrencies = this.getDataFromLocaleStorage();
-    }
-  },
-
   methods: {
     async getCurrencies(url) {
       try {
@@ -216,8 +214,14 @@ export default {
     },
 
     reset(event) {
+      // eslint-disable-next-line
+      debugger
       event.currentTarget.reset();
-      Object.assign(this, this.$options.data());
+      Object.assign(this, {
+        amount: "",
+        currencyFrom: "",
+        currencyTo: "",
+      });
     },
 
     //Exchange UAN
