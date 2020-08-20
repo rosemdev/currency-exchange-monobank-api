@@ -336,7 +336,6 @@ export default {
 };
 </script>
 <style lang="less">
-
 //default/mobile styles
 .main {
   display: flex;
@@ -411,11 +410,6 @@ export default {
   }
 
   .change-currency-order {
-    margin-top: 30px;
-    cursor: pointer;
-    margin-left: -5px;
-    margin-right: -5px;
-
     img {
       width: 25px;
     }
@@ -425,7 +419,6 @@ export default {
     width: 100%;
     border-radius: 32px;
     margin-top: 25px;
-    margin-bottom: 25px;
 
     header {
       display: flex;
@@ -464,10 +457,6 @@ export default {
 
         .customer-data {
           margin: 15px;
-
-          &:first-child {
-            margin-right: 25px;
-          }
         }
 
         .change-currency-order {
@@ -505,11 +494,11 @@ export default {
     border-radius: 32px;
 
     &:before,
-    &after {
+    &:after {
       position: absolute;
       content: "";
       height: 100%;
-      width: 100%;
+      width: 80%;
       background-color: rgba(31, 33, 43, 0.32);
     }
 
@@ -522,7 +511,6 @@ export default {
 
     &:after {
       margin-top: -90px;
-      width: 100%;
       max-width: 880px;
       left: 30px;
       filter: blur(32px);
@@ -544,14 +532,87 @@ export default {
   opacity: 0;
 }
 
-//default/mobile styles
-@media (min-width: 1024px) {
+//tablet styles
+@media (min-width: 768px) {
   .main {
-    max-width: 890px;
+    max-width: 700px;
+
+    .change-currency-order {
+      cursor: pointer;
+    }
 
     .converter-popup {
       margin-top: 180px;
+    }
+  }
+}
 
+@media (min-width: 1024px) {
+  .main {
+    .converter-popup {
+      .converter-content {
+        .converter {
+          .change-currency-order {
+            flex-basis: 0;
+            margin-top: 25px;
+
+            img {
+              transform: none;
+              margin: 0;
+            }
+          }
+
+          .reset {
+            margin-left: 0;
+          }
+        }
+      }
+    }
+    .mask {
+      &:before,
+      &:after {
+        width: 100%;
+      }
+    }
+  }
+}
+
+//desktop small screen styles
+@media (min-width: 1024px) and (max-width: 1600px) {
+  .main {
+    max-width: 820px;
+
+    input,
+    select,
+    button {
+      width: 180px;
+      padding: 10px;
+      font-size: 12px;
+      height: 40px;
+    }
+
+    select {
+      background-position: 155px center;
+    }
+  }
+}
+
+//desktop 1920 styles
+@media (min-width: 1600px) {
+  .main {
+    max-width: 890px;
+
+    input,
+    select,
+    button {
+      width: 205px;
+      padding: 15px;
+      font-size: 14px;
+      border-radius: 16px;
+      height: 50px;
+    }
+
+    .converter-popup {
       header {
         .logo {
           img {
@@ -561,17 +622,6 @@ export default {
       }
 
       .converter-content {
-        .converter {
-          .change-currency-order {
-            flex-basis: 0;
-            margin-top: 30px;
-
-            img {
-              transform: none;
-              margin: 0;
-            }
-          }
-        }
         .result {
           .result-amount {
             font-size: 32px;
