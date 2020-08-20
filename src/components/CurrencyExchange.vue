@@ -78,19 +78,17 @@
             </p>
           </transition>
           <transition name="fade">
-            <p class="result-amount uah-rate" v-if="result">
+            <p class="result-amount one-amount-rate" v-if="result">
               <span>1 </span>
               <span>{{ currencyFrom.AlphabeticCode }}</span>
               <span>
-                = {{ (uahRate).toFixed(2) }}
-                {{ currencyTo.AlphabeticCode }}</span
+                = {{ uahRate.toFixed(2) }} {{ currencyTo.AlphabeticCode }}</span
               >
             </p>
           </transition>
         </div>
       </div>
-      <div class="mask mask-1"></div>
-      <div class="mask mask-2"></div>
+      <div class="mask"></div>
     </div>
     <ErrorPopup
       :headerTitle="headerTitle"
@@ -338,14 +336,17 @@ export default {
 };
 </script>
 <style lang="less">
+
+//default/mobile styles
 .main {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 890px;
+  max-width: 330px;
   width: 100%;
   margin: auto;
+  font-size: 14px;
 
   input,
   select,
@@ -423,7 +424,8 @@ export default {
   .converter-popup {
     width: 100%;
     border-radius: 32px;
-    margin-top: 180px;
+    margin-top: 25px;
+    margin-bottom: 25px;
 
     header {
       display: flex;
@@ -437,7 +439,7 @@ export default {
 
       .logo {
         img {
-          max-width: 400px;
+          max-width: 270px;
         }
       }
     }
@@ -467,6 +469,15 @@ export default {
             margin-right: 25px;
           }
         }
+
+        .change-currency-order {
+          flex-basis: 100%;
+          margin: 0;
+          img {
+            transform: translate(-50%);
+            margin-left: 50%;
+          }
+        }
       }
 
       .result {
@@ -475,11 +486,11 @@ export default {
 
         .result-amount {
           font-weight: 400;
-          font-size: 32px;
+          font-size: 21px;
           text-align: center;
           margin-bottom: 5px;
         }
-        .uah-rate {
+        .one-amount-rate {
           margin: 5px;
           font-size: 14px;
           color: #ccc;
@@ -489,25 +500,33 @@ export default {
   }
 
   .mask {
-    position: absolute;
+    position: relative;
     height: 100px;
     border-radius: 32px;
-    background-color: rgba(31, 33, 43, 0.32);
-  }
-  .mask-1 {
-    margin-top: -50px;
-    max-width: 830px;
-    width: 100%;
-    margin-left: 55px;
-    filter: blur(48px);
-  }
 
-  .mask-2 {
-    margin-top: -90px;
-    width: 100%;
-    max-width: 880px;
-    margin-left: 30px;
-    filter: blur(32px);
+    &:before,
+    &after {
+      position: absolute;
+      content: "";
+      height: 100%;
+      width: 100%;
+      background-color: rgba(31, 33, 43, 0.32);
+    }
+
+    &:before {
+      margin-top: -50px;
+      max-width: 830px;
+      left: 55px;
+      filter: blur(48px);
+    }
+
+    &:after {
+      margin-top: -90px;
+      width: 100%;
+      max-width: 880px;
+      left: 30px;
+      filter: blur(32px);
+    }
   }
 }
 
@@ -525,61 +544,43 @@ export default {
   opacity: 0;
 }
 
-@media (max-width: 767px) {
+//default/mobile styles
+@media (min-width: 1024px) {
   .main {
-    max-width: 330px;
+    max-width: 890px;
 
     .converter-popup {
-      margin-top: 25px;
-      margin-bottom: 25px;
+      margin-top: 180px;
 
-      .converter {
-        .change-currency-order {
-          flex-basis: 100%;
-          margin: 0;
-          img {
-            transform: translate(-50%);
-            margin-left: 50%;
-          }
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 1024px) {
-  .main {
-    .converter-popup {
       header {
         .logo {
           img {
-            max-width: 270px;
-          }
-        }
-      }
-    }
-
-    .mask {
-      height: auto;
-    }
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  .main {
-    max-width: 660px;
-
-    .converter-content {
-      .converter {
-        .customer-data {
-          &:first-child {
-            order: 1;
+            max-width: 400px;
           }
         }
       }
 
-      .reset {
-        order: 1;
+      .converter-content {
+        .converter {
+          .change-currency-order {
+            flex-basis: 0;
+            margin-top: 30px;
+
+            img {
+              transform: none;
+              margin: 0;
+            }
+          }
+        }
+        .result {
+          .result-amount {
+            font-size: 32px;
+          }
+
+          .one-amount-rate {
+            font-size: initial;
+          }
+        }
       }
     }
   }
