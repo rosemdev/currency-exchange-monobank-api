@@ -77,6 +77,16 @@
               >
             </p>
           </transition>
+          <transition name="fade">
+            <p class="result-amount uah-rate" v-if="result">
+              <span>1 </span>
+              <span>{{ currencyFrom.AlphabeticCode }}</span>
+              <span>
+                = {{ (uahRate).toFixed(2) }}
+                {{ currencyTo.AlphabeticCode }}</span
+              >
+            </p>
+          </transition>
         </div>
       </div>
       <div class="mask mask-1"></div>
@@ -104,6 +114,7 @@ export default {
       monoCurrencies: "",
       availableCurrencies,
       uahCurrencyCode: 980,
+      uahRate: "",
       reloadPage: false,
       amount: "",
       currencyFrom: "",
@@ -149,7 +160,7 @@ export default {
       let currencyFromExchangeRate = "";
       let currencyToExchangeRate = "";
       let uahExchangeData = "";
-      let uahRate = "";
+      //let uahRate = "";
 
       //help to know exchange type
       // UAH to ANY (returns true) or
@@ -166,12 +177,14 @@ export default {
           this.monoCurrencies,
           { currencyFromCode, currencyToCode }
         );
-        uahRate = this.mono_getUahRate(uahExchangeData, isExchangeFromUah);
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.uahRate = this.mono_getUahRate(uahExchangeData, isExchangeFromUah);
       } else if (
         currencyFromCode === currencyToCode &&
         currencyToCode === this.uahCurrencyCode
       ) {
-        uahRate = 1;
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.uahRate = 1;
       } else {
         //Exchange not UAH
         currencyFromExchangeRate = this.mono_findMultiCurrencyRateObj(
@@ -182,7 +195,8 @@ export default {
           this.monoCurrencies,
           currencyToCode
         );
-        uahRate = this.mono_getMultiCurrencyRate(
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.uahRate = this.mono_getMultiCurrencyRate(
           currencyFromExchangeRate,
           currencyToExchangeRate
         );
@@ -191,7 +205,7 @@ export default {
       console.log("test", amount, currencyFromCode, currencyToCode);
       console.log(currencyFromExchangeRate, currencyToExchangeRate);
 
-      return (amount * uahRate).toFixed(2);
+      return (amount * this.uahRate).toFixed(2);
     }
   },
 
@@ -463,6 +477,12 @@ export default {
           font-weight: 400;
           font-size: 32px;
           text-align: center;
+          margin-bottom: 5px;
+        }
+        .uah-rate {
+          margin: 5px;
+          font-size: 14px;
+          color: #ccc;
         }
       }
     }
