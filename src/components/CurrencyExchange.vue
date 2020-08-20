@@ -73,8 +73,7 @@
               <span>{{ amount > 0 ? amount : null }} </span>
               <span v-if="amount > 0">{{ currencyFrom.AlphabeticCode }}</span>
               <span v-if="result && amount > 0 && currencyFrom">
-                = {{ result }}
-                {{ currencyTo.AlphabeticCode }}</span
+                = {{ result }} {{ currencyTo.AlphabeticCode }}</span
               >
             </p>
           </transition>
@@ -104,7 +103,7 @@ export default {
     return {
       monoCurrencies: "",
       availableCurrencies,
-      uanCurrencyCode: 980,
+      uahCurrencyCode: 980,
       reloadPage: false,
       amount: "",
       currencyFrom: "",
@@ -132,6 +131,9 @@ export default {
 
   computed: {
     result() {
+      // eslint-disable-next-line
+      //debugger;
+
       if (
         !this.amount ||
         !this.currencyFrom.NumericCode ||
@@ -146,26 +148,32 @@ export default {
 
       let currencyFromExchangeRate = "";
       let currencyToExchangeRate = "";
-      let uanExchangeData = "";
-      let uanRate = "";
+      let uahExchangeData = "";
+      let uahRate = "";
 
       //help to know exchange type
-      // UAN to ANY (returns true) or
-      // ANY to UAN (returns false)
-      let isExchangeFromUan = currencyFromCode === this.uanCurrencyCode;
+      // UAH to ANY (returns true) or
+      // ANY to UAH (returns false)
+      let isExchangeFromUah = currencyFromCode === this.uahCurrencyCode;
 
-      //Exchange UAN
+      //Exchange UAH
       if (
-        currencyFromCode === this.uanCurrencyCode ||
-        currencyToCode === this.uanCurrencyCode
+        (currencyFromCode === this.uahCurrencyCode ||
+          currencyToCode === this.uahCurrencyCode) &&
+        currencyToCode !== currencyFromCode
       ) {
-        uanExchangeData = this.mono_findUanCurrencyRateObj(
+        uahExchangeData = this.mono_findUahCurrencyRateObj(
           this.monoCurrencies,
           { currencyFromCode, currencyToCode }
         );
-        uanRate = this.mono_getUanRate(uanExchangeData, isExchangeFromUan);
+        uahRate = this.mono_getUahRate(uahExchangeData, isExchangeFromUah);
+      } else if (
+        currencyFromCode === currencyToCode &&
+        currencyToCode === this.uahCurrencyCode
+      ) {
+        uahRate = 1;
       } else {
-        //Exchange not UAN
+        //Exchange not UAH
         currencyFromExchangeRate = this.mono_findMultiCurrencyRateObj(
           this.monoCurrencies,
           currencyFromCode
@@ -174,7 +182,7 @@ export default {
           this.monoCurrencies,
           currencyToCode
         );
-        uanRate = this.mono_getMultiCurrencyRate(
+        uahRate = this.mono_getMultiCurrencyRate(
           currencyFromExchangeRate,
           currencyToExchangeRate
         );
@@ -183,7 +191,7 @@ export default {
       console.log("test", amount, currencyFromCode, currencyToCode);
       console.log(currencyFromExchangeRate, currencyToExchangeRate);
 
-      return (amount * uanRate).toFixed(2);
+      return (amount * uahRate).toFixed(2);
     }
   },
 
@@ -226,30 +234,30 @@ export default {
       });
     },
 
-    //Exchange UAN
-    mono_findUanCurrencyRateObj(arr, searchExchangeCodes) {
+    //Exchange UAH
+    mono_findUahCurrencyRateObj(arr, searchExchangeCodes) {
       let { currencyFromCode, currencyToCode } = searchExchangeCodes;
       let searchCode = "";
 
       //currencyCodeA => returns ANY currency, which is unique identifier
-      //currencyCodeB => returns UAN currency, which is not unique identifier
-      //from UAN to ANY => search by currencyToCode, which is unique
-      if (currencyFromCode === this.uanCurrencyCode) {
+      //currencyCodeB => returns UAH currency, which is not unique identifier
+      //from UAH to ANY => search by currencyToCode, which is unique
+      if (currencyFromCode === this.uahCurrencyCode) {
         searchCode = currencyToCode;
       } else {
-        //from ANY to UAN => search by currencyFromCode, which is unique
+        //from ANY to UAH => search by currencyFromCode, which is unique
         searchCode = currencyFromCode;
       }
 
       return this.mono_findMultiCurrencyRateObj(arr, searchCode);
     },
 
-    //Exchange not UAN
+    //Exchange not UAH
     mono_findMultiCurrencyRateObj(arr, searchCode) {
       return arr.find(item => {
         return (
           item.currencyCodeA === searchCode &&
-          item.currencyCodeB === this.uanCurrencyCode
+          item.currencyCodeB === this.uahCurrencyCode
         );
       });
     },
@@ -272,30 +280,30 @@ export default {
       }
     },
 
-    //Exchange UAN
-    mono_getUanRate(currencyRate, isExchangeFromUan) {
-      let uanRate;
+    //Exchange UAH
+    mono_getUahRate(currencyRate, isExchangeFromUah) {
+      let uahRate;
       let availableRate = currencyRate.rateSell ?? currencyRate.rateCross;
 
-      if (isExchangeFromUan) {
-        uanRate = 1 / availableRate;
+      if (isExchangeFromUah) {
+        uahRate = 1 / availableRate;
       } else {
-        uanRate = availableRate;
+        uahRate = availableRate;
       }
 
-      return uanRate;
+      return uahRate;
     },
 
-    //Exchange not UAN
+    //Exchange not UAH
     mono_getMultiCurrencyRate(currencyFrom, currencyTo) {
-      let uanRate;
+      let uahRate;
 
       //checking different cases when rateSell or rateCross are available or not
-      uanRate =
+      uahRate =
         (currencyFrom.rateSell ?? currencyFrom.rateCross) /
         (currencyTo.rateSell ?? currencyTo.rateCross);
 
-      return uanRate;
+      return uahRate;
     },
 
     switchCurrencyOrder() {
@@ -497,7 +505,6 @@ export default {
   opacity: 0;
 }
 
-
 @media (max-width: 767px) {
   .main {
     max-width: 330px;
@@ -505,14 +512,6 @@ export default {
     .converter-popup {
       margin-top: 25px;
       margin-bottom: 25px;
-
-      header {
-        .logo {
-          img {
-            max-width:270px ;
-          }
-        }
-      }
 
       .converter {
         .change-currency-order {
@@ -525,6 +524,21 @@ export default {
         }
       }
     }
+  }
+}
+
+@media (max-width: 1024px) {
+  .main {
+    .converter-popup {
+      header {
+        .logo {
+          img {
+            max-width: 270px;
+          }
+        }
+      }
+    }
+
     .mask {
       height: auto;
     }
@@ -539,7 +553,7 @@ export default {
       .converter {
         .customer-data {
           &:first-child {
-            order: 1
+            order: 1;
           }
         }
       }
@@ -548,11 +562,6 @@ export default {
         order: 1;
       }
     }
-
-    .mask {
-      height: auto;
-    }
   }
-
 }
 </style>
