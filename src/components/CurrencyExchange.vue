@@ -140,8 +140,6 @@ export default {
 
   computed: {
     result() {
-      // eslint-disable-next-line
-      //debugger;
 
       if (
         !this.amount ||
@@ -200,16 +198,8 @@ export default {
         );
       }
 
-      console.log("test", amount, currencyFromCode, currencyToCode);
-      console.log(currencyFromExchangeRate, currencyToExchangeRate);
-
       return (amount * this.uahRate).toFixed(2);
     }
-  },
-
-  errorCaptured() {
-    // eslint-disable-next-line
-    debugger;
   },
 
   methods: {
@@ -471,7 +461,7 @@ export default {
 
       .result {
         align-self: center;
-        min-height: 112px;
+        min-height: 115px;
 
         .result-amount {
           font-weight: 400;
