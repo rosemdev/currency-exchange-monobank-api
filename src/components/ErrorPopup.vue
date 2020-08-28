@@ -27,7 +27,6 @@ export default {
   z-index: 1;
   max-width: 300px;
   width: 100%;
-  top: 50%;
 
   &:before {
     content: "";
@@ -62,9 +61,4 @@ export default {
   }
 }
 
-@media (max-width: 767px) {
-  .popup {
-    top: auto;
-  }
-}
 </style>

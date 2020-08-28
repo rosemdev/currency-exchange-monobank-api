@@ -9,7 +9,7 @@
         <div class="header-block"><span>Using Monobank API</span></div>
       </header>
       <div class="converter-content">
-        <form class="converter" @reset="reset">
+        <form class="converter" @reset="reset" @submit.prevent>
           <div class="customer-data">
             <label for="amount">Type an amount </label>
             <input
@@ -120,7 +120,7 @@ export default {
       errorMessage:
         "Sorry for the inconvenience! Currently we are observing some errors on the server side. " +
         "Please try to reload the page. Thank you!",
-      headerTitle: "Internal Server Error"
+      headerTitle: "Too many requests to the Monobank"
     };
   },
 
@@ -336,6 +336,7 @@ export default {
   width: 100%;
   margin: auto;
   font-size: 14px;
+  min-height: 100vh;
 
   input,
   select,
@@ -408,7 +409,6 @@ export default {
   .converter-popup {
     width: 100%;
     border-radius: 32px;
-    margin-top: 25px;
 
     header {
       display: flex;
@@ -530,10 +530,6 @@ export default {
     .change-currency-order {
       cursor: pointer;
     }
-
-    .converter-popup {
-      margin-top: 180px;
-    }
   }
 }
 
@@ -544,7 +540,7 @@ export default {
         .converter {
           .change-currency-order {
             flex-basis: 0;
-            margin-top: 25px;
+            margin-top: 27px;
 
             img {
               transform: none;
