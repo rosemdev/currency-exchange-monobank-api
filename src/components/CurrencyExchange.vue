@@ -224,7 +224,7 @@ export default {
     },
 
     reportValidity(event) {
-      this.isValid = event.target.reportValidity();
+      return event.target.reportValidity();
     },
 
     reset(event) {
@@ -326,6 +326,7 @@ export default {
 };
 </script>
 <style lang="less">
+
 //default/mobile styles
 .main {
   display: flex;
@@ -341,7 +342,7 @@ export default {
   input,
   select,
   button {
-    width: 205px;
+    width: 285px;
     padding: 15px;
     font-size: 14px;
     border-radius: 16px;
@@ -357,7 +358,7 @@ export default {
   select {
     appearance: none; /* Remove default arrow */
     background-image: url("../assets/arrow.png"); /* Add custom arrow */
-    background-position: 180px center;
+    background-position: 250px center;
     background-repeat: no-repeat;
     background-size: 10px;
 
@@ -480,14 +481,13 @@ export default {
 
   .mask {
     position: relative;
-    height: 100px;
     border-radius: 32px;
 
     &:before,
     &:after {
       position: absolute;
+      height: 100px;
       content: "";
-      height: 100%;
       width: 80%;
       background-color: rgba(31, 33, 43, 0.32);
     }
