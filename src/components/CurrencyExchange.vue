@@ -432,7 +432,7 @@ export default {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 20px;
+      padding: 7px;
       font-weight: 200;
       position: relative;
       z-index: 1;
@@ -462,7 +462,7 @@ export default {
 
       .result {
         align-self: center;
-        min-height: 115px;
+        min-height: 100px;
 
         .result-amount {
           font-weight: 400;
